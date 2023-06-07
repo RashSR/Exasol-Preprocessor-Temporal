@@ -1,7 +1,11 @@
 import org.junit.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.stream.Stream;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -46,7 +50,8 @@ public class SqlTests {
     {
         //Arrange
         ArrayList<String> output = new ArrayList<>();
-        String tableName = "tableName";
+        String tableName = "\"t\"";
+        //String tableName = "new\"Name";
         String inputCommand = "UPDATE " + tableName + " SET name = ''Martin'' WHERE name = ''Peter''";
         String sqlCommand = inputCommand.replace(tableName, tableName.toUpperCase()).replace("''", "'");
         String histTableName = "HIST_" + tableName.toUpperCase();
@@ -112,21 +117,18 @@ public class SqlTests {
     public void testAllColumnsScript()
     {
         //Arrange
-        String[] columnNames = new String[]{"id", "name", "second_id"};
-        String[] columnTypes = new String[]{"INT", "VARCHAR(32)", "INT"};
-        String columns = connectNameAndType(columnNames, columnTypes);
-        String tableName = "MyNewTestTbl";
         String output = null;
 
         //Act
         try
         {
-            statement.executeUpdate("CREATE TABLE " + tableName + "(" + columns + ")");
-            statement.executeUpdate("CREATE OR REPLACE SCRIPT testAllColumns(tableName) AS import('TEST.HISTORYLIB', 'history_lib') output(history_lib.getAllColumns(tableName))");
-            resultSet = statement.executeQuery("EXECUTE SCRIPT testAllColumns('" + tableName + "') with output;");
+            statement.executeUpdate("CREATE TABLE MyNewTestTbl (id INT, name VARCHAR(32))");
+            statement.executeUpdate("CREATE OR REPLACE SCRIPT testAllColumns(tableName) AS import('TEST.HISTORYLIB', 'history_lib') output(table.concat(history_lib.getAllColumns(tableName), ', '))");
+
+            resultSet = statement.executeQuery("EXECUTE SCRIPT testAllColumns('MyNewTestTbl') with output;");
             resultSet.next();
             output = resultSet.getString("OUTPUT");
-            statement.executeUpdate("DROP TABLE " + tableName);
+            statement.executeUpdate("DROP TABLE MyNewTestTbl");
             statement.executeUpdate("DROP SCRIPT testAllColumns");
         }
         catch (SQLException e)
@@ -134,26 +136,44 @@ public class SqlTests {
             throw new RuntimeException(e);
         }
 
-        String connectedColumns = String.join(", ", columnNames);
-
         //Assert
-        assertEquals(true, output.equalsIgnoreCase(connectedColumns));
+        assertEquals(true, output.equalsIgnoreCase("id, name"));
     }
 
-    private String connectNameAndType(String[] names, String[] types)
+
+    private static Stream<Arguments> isKeywordParameters()
     {
-        if(names.length != types.length)
-            throw new IllegalArgumentException("Size of Arrays don't match.");
+        return Stream.of(
+                Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'CREATE', 1", true),
+                Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'CREATE', 2", false),
+                Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'TABLE', 1", false),
+                Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'TABLE', 2", true)
+        );
+    }
 
-        String connectedString = "";
-        for(int i = 0; i <= names.length - 1; i++)
+    @ParameterizedTest
+    @MethodSource("isKeywordParameters")
+    public void testIsKeyword(String sqlCommand, boolean assertion)
+    {
+        //Arrange
+        oneTimeSetUp();
+        boolean output;
+
+        //Act
+        try
         {
-            connectedString += names[i] + " " + types[i];
-
-            if(i < names.length - 1)
-                connectedString += ", ";
+            statement.executeUpdate("CREATE OR REPLACE SCRIPT testIsKeyword(sqlCommand, keyword, pos) AS import('TEST.HISTORYLIB', 'history_lib') output(history_lib.isKeyword(sqlCommand, keyword, pos))");
+            resultSet = statement.executeQuery("EXECUTE SCRIPT testIsKeyword("+sqlCommand+") with output;");
+            resultSet.next();
+            output = resultSet.getBoolean("OUTPUT");
+            statement.executeUpdate("DROP SCRIPT testIsKeyword");
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
         }
 
-        return connectedString;
+        //Assert
+        assertEquals(assertion, output);
     }
 }
