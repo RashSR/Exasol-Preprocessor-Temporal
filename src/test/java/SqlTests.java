@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class SqlTests {
 
@@ -93,7 +94,7 @@ public class SqlTests {
     {
         //Arrange
         String sqlCommand = "SELECT * FROM movies";
-        String output = null;
+        String output;
 
         //Act
         try
@@ -117,7 +118,7 @@ public class SqlTests {
     public void testAllColumnsScript()
     {
         //Arrange
-        String output = null;
+        String output;
 
         //Act
         try
@@ -137,7 +138,7 @@ public class SqlTests {
         }
 
         //Assert
-        assertEquals(true, output.equalsIgnoreCase("id, name"));
+        assertTrue(output.equalsIgnoreCase("id, name"));
     }
 
 
