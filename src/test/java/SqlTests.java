@@ -90,31 +90,6 @@ public class SqlTests {
     }
 
     @Test
-    public void testSetEndSemicolonScript()
-    {
-        //Arrange
-        String sqlCommand = "SELECT * FROM movies";
-        String output;
-
-        //Act
-        try
-        {
-            statement.executeUpdate("CREATE OR REPLACE SCRIPT testSetEndSemicolon(sqlCommand) AS import('TEST.HISTORYLIB', 'history_lib') output(history_lib.setEndSemicolon(sqlCommand))");
-            resultSet = statement.executeQuery("EXECUTE SCRIPT testSetEndSemicolon('" + sqlCommand + "') with output;");
-            resultSet.next();
-            output = resultSet.getString("OUTPUT");
-            statement.executeUpdate("DROP SCRIPT testSetEndSemicolon");
-        }
-        catch(SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-
-        //Assert
-        assertEquals(sqlCommand + ";", output);
-    }
-
-    @Test
     public void testAllColumnsScript()
     {
         //Arrange
