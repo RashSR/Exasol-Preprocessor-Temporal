@@ -7,16 +7,18 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 
 public class SqlTests {
 
-
+    //region Fields
     private static Connection connection;
     private static Statement statement;
-
     private static ResultSet resultSet;
+
+    //endregion
+
+    //region Setup and Teardown
     @BeforeClass
     public static void oneTimeSetUp()
     {
@@ -46,6 +48,14 @@ public class SqlTests {
         }
     }
 
+    @After
+    public void teardown() {
+        resultSet = null;
+    }
+
+    //endregion
+
+    //region Library
     @Test
     public void testExtractTableNameAndSqlCommandScript()
     {
@@ -123,7 +133,8 @@ public class SqlTests {
                 Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'CREATE', 1", true),
                 Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'CREATE', 2", false),
                 Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'TABLE', 1", false),
-                Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'TABLE', 2", true)
+                Arguments.of("'CREATE TABLE testTable (id INT, name VARCHAR(32))', 'TABLE', 2", true),
+                Arguments.of("'INSERT INTO testTable (id) VALUES (1)', 'into', 2", true)
         );
     }
 
@@ -152,4 +163,206 @@ public class SqlTests {
         //Assert
         assertEquals(assertion, output);
     }
+
+    //endregion
+
+    //region CREATE TABLE
+    @Test
+    public void testCreate()
+    {
+        //TODO: CREATE TABLE LIKE
+        //Arrange
+        String viewColumns;
+        String histColumns;
+
+        //Act
+        try
+        {
+            statement.executeUpdate("ALTER SESSION SET sql_preprocessor_script = TEST.MYPREPROCESSOR");
+            statement.executeQuery("CREATE TABLE MyNewTestTbl (id INT, name VARCHAR(32))");
+            resultSet = statement.executeQuery("SELECT * FROM MYNEWTESTTBL");
+            viewColumns = resultSet.toString();
+            resultSet = statement.executeQuery("SELECT * FROM HIST_MYNEWTESTTBL");
+            histColumns = resultSet.toString();
+
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertNotNull(resultSet);
+        assertTrue(viewColumns.equalsIgnoreCase("id name "));
+        assertTrue(histColumns.equalsIgnoreCase("id name valid_from valid_until "));
+    }
+
+    //endregion
+
+    //region INSERT INTO
+    @Test
+    public void testSimpleInsert()
+    {
+        //Arrange
+        int id;
+        String name;
+
+        //Act
+        try
+        {
+            setupPreprocessor();
+            statement.executeQuery("INSERT INTO MyNewTestTbl (id, name) VALUES (1, 'TestName')");
+
+            resultSet = statement.executeQuery("SELECT * FROM MYNEWTESTTBL");
+            resultSet.next();
+            id = resultSet.getInt(1);
+            name = resultSet.getString(2);
+
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertNotNull(resultSet);
+        assertEquals(1, id);
+        assertTrue(name.equals("TestName"));
+    }
+
+    @Test
+    public void testSimpleMultipleInsert()
+    {
+        //Arrange
+        int[] ids = new int[2];
+        String[] names = new String[2];
+
+        //Act
+        try {
+            setupPreprocessor();
+            statement.executeQuery("INSERT INTO MyNewTestTbl (id, name) VALUES (1, 'TestName'), (2, 'SecondName')");
+            resultSet = statement.executeQuery("SELECT * FROM MYNEWTESTTBL");
+            for(int i = 0; i < ids.length; i++)
+            {
+                resultSet.next();
+                ids[i] = resultSet.getInt(1);
+                names[i] = resultSet.getString(2);
+            }
+
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertEquals(1, ids[0]);
+        assertTrue(names[0].equals("TestName"));
+        assertEquals(2, ids[1]);
+        assertTrue(names[1].equals("SecondName"));
+    }
+
+    @Test
+    public void insertFromAnotherTableAllColumns()
+    {
+        //Arrange
+        int[] ids = new int[2];
+        String[] names = new String[2];
+
+        //Act
+        try
+        {
+            setupPreprocessor();
+            statement.executeQuery("CREATE TABLE SecondTestTable LIKE MyNewTestTbl");
+            statement.executeQuery("INSERT INTO SecondTestTable (id, name) VALUES (1, 'TestName'), (2, 'SecondName')");
+            statement.executeQuery("INSERT INTO MyNewTestTbl SELECT * FROM SecondTestTable");
+            resultSet = statement.executeQuery("SELECT * FROM MYNEWTESTTBL");
+            for(int i = 0; i < ids.length; i++)
+            {
+                resultSet.next();
+                ids[i] = resultSet.getInt(1);
+                names[i] = resultSet.getString(2);
+            }
+
+            teardownPreprocessor();
+            statement.executeUpdate("DROP VIEW SecondTestTable");
+            statement.executeUpdate("DROP TABLE HIST_SECONDTESTTABLE");
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+        //Assert
+        assertEquals(1, ids[0]);
+        assertTrue(names[0].equals("TestName"));
+        assertEquals(2, ids[1]);
+        assertTrue(names[1].equals("SecondName"));
+    }
+
+    @Test
+    public void insertFromAnotherTableSpecifiedColumns()
+    {
+        //Arrange
+        int[] ids = new int[2];
+        String[] names = new String[2];
+
+        //Act
+        try
+        {
+            setupPreprocessor();
+            statement.executeQuery("CREATE TABLE SecondTestTable LIKE MyNewTestTbl");
+            statement.executeQuery("INSERT INTO SecondTestTable (id, name) VALUES (1, 'TestName'), (2, 'SecondName')");
+            statement.executeQuery("INSERT INTO MyNewTestTbl SELECT (id, name) FROM SecondTestTable");
+            resultSet = statement.executeQuery("SELECT * FROM MYNEWTESTTBL");
+            for(int i = 0; i < ids.length; i++)
+            {
+                resultSet.next();
+                ids[i] = resultSet.getInt(1);
+                names[i] = resultSet.getString(2);
+            }
+
+            teardownPreprocessor();
+            statement.executeUpdate("DROP VIEW SecondTestTable");
+            statement.executeUpdate("DROP TABLE HIST_SECONDTESTTABLE");
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+        //Assert
+        assertEquals(1, ids[0]);
+        assertTrue(names[0].equals("TestName"));
+        assertEquals(2, ids[1]);
+        assertTrue(names[1].equals("SecondName"));
+    }
+
+    //endregion
+
+    //region UPDATE
+
+    //endregion
+
+    //region DELETE
+
+    //endregion
+
+    //region Helpmethods
+
+    private void setupPreprocessor() throws SQLException
+    {
+        statement.executeUpdate("ALTER SESSION SET sql_preprocessor_script = TEST.MYPREPROCESSOR");
+        statement.executeQuery("CREATE TABLE MyNewTestTbl (id INT, name VARCHAR(32))");
+    }
+
+    private void teardownPreprocessor() throws SQLException
+    {
+        statement.executeUpdate("ALTER SESSION SET sql_preprocessor_script = null");
+        statement.executeUpdate("DROP TABLE HIST_MYNEWTESTTBL");
+        statement.executeUpdate("DROP VIEW MYNEWTESTTBL");
+    }
+
+    //endregion
 }
