@@ -168,9 +168,8 @@ public class SqlTests {
 
     //region CREATE TABLE
     @Test
-    public void testCreate()
+    public void createTable()
     {
-        //TODO: CREATE TABLE LIKE
         //Arrange
         String viewColumns;
         String histColumns;
@@ -186,6 +185,38 @@ public class SqlTests {
             histColumns = resultSet.toString();
 
             teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertNotNull(resultSet);
+        assertTrue(viewColumns.equalsIgnoreCase("id name "));
+        assertTrue(histColumns.equalsIgnoreCase("id name valid_from valid_until "));
+    }
+
+    @Test
+    public void createTableLike()
+    {
+        //Arrange
+        String viewColumns;
+        String histColumns;
+
+        //Act
+        try
+        {
+            statement.executeUpdate("ALTER SESSION SET sql_preprocessor_script = TEST.MYPREPROCESSOR");
+            statement.executeQuery("CREATE TABLE MyNewTestTbl (id INT, name VARCHAR(32))");
+            statement.executeQuery("CREATE TABLE MyNewTestTbl2 LIKE MYNEWTESTTBL");
+            resultSet = statement.executeQuery("SELECT * FROM MyNewTestTbl2");
+            viewColumns = resultSet.toString();
+            resultSet = statement.executeQuery("SELECT * FROM HIST_MYNEWTESTTBL2");
+            histColumns = resultSet.toString();
+            teardownPreprocessor();
+            statement.executeUpdate("DROP VIEW MYNEWTESTTBL2");
+            statement.executeUpdate("DROP TABLE HIST_MYNEWTESTTBL2");
         }
         catch(SQLException e)
         {
@@ -343,13 +374,122 @@ public class SqlTests {
 
     //region UPDATE
 
+    @Test
+    public void updateWithWhereClause()
+    {
+        //Arrange
+        String name;
+        int count;
+
+        //Act
+        try {
+            setupPreprocessor();
+            statement.executeQuery("INSERT INTO MyNewTestTbl (id, name) VALUES (1, 'TestName')");
+            statement.executeQuery("UPDATE MyNewTestTbl SET name = 'NewName' WHERE name = 'TestName'");
+            resultSet = statement.executeQuery("SELECT * FROM MyNewTestTbl WHERE id = 1");
+            resultSet.next();
+            name = resultSet.getString(2);
+            resultSet = statement.executeQuery("SELECT COUNT(*) FROM HIST_MYNEWTESTTBL WHERE id = 1 AND valid_until != '9999-12-31 23:59:59.999'");
+            resultSet.next();
+            count = resultSet.getInt(1);
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+        //Assert
+        assertTrue(name.equals("NewName"));
+        assertEquals(1, count);
+    }
+
+    @Test
+    public void updateAllRows()
+    {
+        //Arrange
+        String name;
+
+        //Act
+        try {
+            setupPreprocessor();
+            statement.executeQuery("INSERT INTO MyNewTestTbl (id, name) VALUES (1, 'TestName')");
+            statement.executeQuery("UPDATE MyNewTestTbl SET name = 'NewName'");
+            resultSet = statement.executeQuery("SELECT * FROM MyNewTestTbl WHERE id = 1");
+            resultSet.next();
+            name = resultSet.getString(2);
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertTrue(name.equals("NewName"));
+    }
+
     //endregion
 
     //region DELETE
 
+    @Test
+    public void DeleteAllRows()
+    {
+        //Arrange
+        int countView;
+        int countHistTable;
+
+        //Act
+        try {
+            setupPreprocessor();
+            statement.executeQuery("INSERT INTO MyNewTestTbl (id, name) VALUES (1, 'TestName')");
+            statement.executeQuery("DELETE FROM MyNewTestTbl");
+            resultSet = statement.executeQuery("SELECT COUNT(*) FROM MyNewTestTbl");
+            resultSet.next();
+            countView = resultSet.getInt(1);
+            resultSet = statement.executeQuery("SELECT COUNT(*) FROM HIST_MYNEWTESTTBL");
+            resultSet.next();
+            countHistTable = resultSet.getInt(1);
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertEquals(0, countView);
+        assertEquals(1, countHistTable);
+    }
+
+    @Test
+    public void deleteWithWhereClause()
+    {
+        //Arrange
+        int count;
+
+        //Act
+        try {
+            setupPreprocessor();
+            statement.executeQuery("INSERT INTO MyNewTestTbl (id, name) VALUES (1, 'TestName'), (2, 'Ute')");
+            statement.executeQuery("DELETE FROM MyNewTestTbl WHERE id = 1");
+            resultSet = statement.executeQuery("SELECT COUNT(*) FROM MyNewTestTbl");
+            resultSet.next();
+            count = resultSet.getInt(1);
+            teardownPreprocessor();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        //Assert
+        assertEquals(1, count);
+    }
+
     //endregion
 
-    //region Helpmethods
+    //region help methods
 
     private void setupPreprocessor() throws SQLException
     {
