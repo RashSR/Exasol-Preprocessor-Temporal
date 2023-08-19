@@ -510,7 +510,7 @@ public class SqlTests {
                 Arguments.of("RENAME TABLE E TO E2"),
                 Arguments.of("SELECT COUNT(*) FROM HIST_TESTTABLE"),
                 Arguments.of("SELECT * FROM HIST_TESTTABLE"),
-                Arguments.of("TRUNCATE testTable"),
+                Arguments.of("TRUNCATE TEST_TABLE"),
                 Arguments.of("SELECT e.NAME FROM E e JOIN TEST_TABLE USING (id) GROUP BY e.name ORDER BY e.name"),
                 Arguments.of("SELECT 3+3"),
                 Arguments.of("DROP VIEW TEST_TABLE"),
