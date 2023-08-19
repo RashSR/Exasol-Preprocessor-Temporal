@@ -489,6 +489,63 @@ public class SqlTests {
 
     //endregion
 
+    //region OneInstructionCheck
+
+    private static Stream<Arguments> oneLineInstructions()
+    {
+        return Stream.of(
+                Arguments.of("CREATE TABLE TEST_TABLE (id INT, name VARCHAR(32))"),
+                Arguments.of("CREATE TABLE E (id INT, name VARCHAR(32))"),
+                Arguments.of("CREATE TABLE CLONE_E LIKE E"),
+                Arguments.of("CREATE TABLE T1 AS SELECT count(*) AS my_count FROM TEST_TABLE WITH NO DATA"),
+                Arguments.of("INSERT INTO E VALUES (1, 'abc')"),
+                Arguments.of("INSERT INTO TEST_TABLE VALUES (2, 'ghi'), (3, 'pqr')"),
+                Arguments.of("INSERT INTO E (id, name) SELECT (id, name) FROM TEST_TABLE"),
+                Arguments.of("UPDATE TEST_TABLE SET id=1 WHERE name='ghi'"),
+                Arguments.of("SELECT * FROM TEST_TABLE WHERE id = 1 AS OF SYSTEM TIME '9999-12-31 23:59:59.999'"),
+                Arguments.of("SELECT * FROM TEST_TABLE AS OF SYSTEM TIME '9999-12-31 23:59:59.999'"),
+                Arguments.of("DELETE FROM E"),
+                Arguments.of("DELETE FROM CLONE_E"),
+                Arguments.of("ALTER TABLE E DROP COLUMN id"),
+                Arguments.of("RENAME TABLE E TO E2"),
+                Arguments.of("SELECT COUNT(*) FROM HIST_TESTTABLE"),
+                Arguments.of("SELECT * FROM HIST_TESTTABLE"),
+                Arguments.of("TRUNCATE testTable"),
+                Arguments.of("SELECT e.NAME FROM E e JOIN TEST_TABLE USING (id) GROUP BY e.name ORDER BY e.name"),
+                Arguments.of("SELECT 3+3"),
+                Arguments.of("DROP VIEW TEST_TABLE"),
+                Arguments.of("DROP TABLE HIST_TEST_TABLE"),
+                Arguments.of("SELECT CURRENT_SESSION")
+
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("oneLineInstructions")
+    public void testOneInstruction(String sqlCommand)
+    {
+        //Arrange
+        oneTimeSetUp();
+
+        boolean success;
+        //Act
+        try
+        {
+            statement.executeUpdate("ALTER SESSION SET sql_preprocessor_script = TEST.MYPREPROCESSOR");
+            statement.execute(sqlCommand);
+            success = true;
+        }
+        catch(SQLException e)
+        {
+            success = false;
+        }
+
+        //Assert
+        assertTrue(success);
+    }
+
+    //endregion
+
     //region help methods
 
     private void setupPreprocessor() throws SQLException
