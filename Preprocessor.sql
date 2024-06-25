@@ -63,7 +63,7 @@ CREATE OR REPLACE SCRIPT createHistoryTableWithView() AS
 	  	query([[RENAME TABLE ::oldName TO ::newName]], {oldName = tableName, newName = histTableName})
 	    query([[ALTER TABLE ::histTable ADD ta_start TIMESTAMP WITH LOCAL TIME ZONE DEFAULT CURRENT_TIMESTAMP]], {histTable = histTableName})
 		query([[ALTER TABLE ::histTable ADD ta_end TIMESTAMP WITH LOCAL TIME ZONE DEFAULT :endTime]], {histTable = histTableName, endTime = endTime})
-		queryText = 'CREATE VIEW ::t AS SELECT '..table.concat(columns, ', ')..' FROM ::histTable WHERE ta_end = :endTime'
+		queryText = 'CREATE VIEW ::t AS SELECT '..table.concat(columns, ', ')..' FROM ::histTable WHERE ta_end >= CURRENT_TIMESTAMP'
 		query(queryText, {t = tableName, histTable = histTableName, c = cols, endTime = endTime})
 		return 'successfully created view '..tableName..' to table '..histTableName..'.'
 	end
