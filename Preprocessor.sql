@@ -61,9 +61,9 @@ CREATE OR REPLACE SCRIPT createHistoryTableWithView() AS
 	  	query(sqlCommand)
 	  	local columns = history_lib.getAllColumns(tableName)
 	  	query([[RENAME TABLE ::oldName TO ::newName]], {oldName = tableName, newName = histTableName})
-	    query([[ALTER TABLE ::histTable ADD valid_from TIMESTAMP WITH LOCAL TIME ZONE DEFAULT CURRENT_TIMESTAMP]], {histTable = histTableName})
-		query([[ALTER TABLE ::histTable ADD valid_until TIMESTAMP WITH LOCAL TIME ZONE DEFAULT :endTime]], {histTable = histTableName, endTime = endTime})
-		queryText = 'CREATE VIEW ::t AS SELECT '..table.concat(columns, ', ')..' FROM ::histTable WHERE valid_until = :endTime'
+	    query([[ALTER TABLE ::histTable ADD ta_start TIMESTAMP WITH LOCAL TIME ZONE DEFAULT CURRENT_TIMESTAMP]], {histTable = histTableName})
+		query([[ALTER TABLE ::histTable ADD ta_end TIMESTAMP WITH LOCAL TIME ZONE DEFAULT :endTime]], {histTable = histTableName, endTime = endTime})
+		queryText = 'CREATE VIEW ::t AS SELECT '..table.concat(columns, ', ')..' FROM ::histTable WHERE ta_end = :endTime'
 		query(queryText, {t = tableName, histTable = histTableName, c = cols, endTime = endTime})
 		return 'successfully created view '..tableName..' to table '..histTableName..'.'
 	end
@@ -113,23 +113,23 @@ CREATE OR REPLACE SCRIPT updateHistoryTableWithView() AS
 		local firstUpdateQuery
 		if setStatement:match("WHERE") then --WHERE clause is present in SET
 			setStatement = newSqlCommand:match("SET%s+(.-)%s+WHERE")
-			firstUpdateQuery = newSqlCommand:gsub('WHERE', 'WHERE valid_until = :endTime AND')
-			firstUpdateQuery = firstUpdateQuery:gsub(setStatement, 'valid_until = :currentTime')
+			firstUpdateQuery = newSqlCommand:gsub('WHERE', 'WHERE ta_end = :endTime AND')
+			firstUpdateQuery = firstUpdateQuery:gsub(setStatement, 'ta_end = :currentTime')
 		else 
-			firstUpdateQuery = newSqlCommand..' WHERE valid_until = :endTime'
-			firstUpdateQuery = firstUpdateQuery:gsub(setStatement, 'valid_until = :currentTime')
+			firstUpdateQuery = newSqlCommand..' WHERE ta_end = :endTime'
+			firstUpdateQuery = firstUpdateQuery:gsub(setStatement, 'ta_end = :currentTime')
 		end
 		suc, res = pquery(firstUpdateQuery, {currentTime = currentTime, endTime = endTime})
 		local insertQuery = newSqlCommand:gsub('UPDATE', 'INSERT INTO')
-		insertQuery = insertQuery:gsub('SET '..setStatement, 'SELECT '..table.concat(columnNames, ', ')..', :currentTime as valid_from FROM '..histTableName)
-		insertQuery = insertQuery:gsub(histTableName, histTableName..' ('..table.concat(columnNames, ', ')..', valid_from)', 1)
+		insertQuery = insertQuery:gsub('SET '..setStatement, 'SELECT '..table.concat(columnNames, ', ')..', :currentTime as ta_start FROM '..histTableName)
+		insertQuery = insertQuery:gsub(histTableName, histTableName..' ('..table.concat(columnNames, ', ')..', ta_start)', 1)
 		local secondUpdateQuery
 		if whereStatement ~= nill then --checks if where is present
-			insertQuery = insertQuery:gsub('WHERE', 'WHERE valid_until = :currentTime AND')
-			secondUpdateQuery = newSqlCommand:gsub('WHERE', 'WHERE valid_until = :endTime AND')
+			insertQuery = insertQuery:gsub('WHERE', 'WHERE ta_end = :currentTime AND')
+			secondUpdateQuery = newSqlCommand:gsub('WHERE', 'WHERE ta_end = :endTime AND')
 		else 
-			insertQuery = insertQuery..' WHERE valid_until = :currentTime'
-			secondUpdateQuery = newSqlCommand..' WHERE valid_until = :endTime'
+			insertQuery = insertQuery..' WHERE ta_end = :currentTime'
+			secondUpdateQuery = newSqlCommand..' WHERE ta_end = :endTime'
 		end
 		suc, res = pquery(insertQuery, {currentTime = currentTime})
 		suc, res = pquery(secondUpdateQuery, {endTime = endTime})
@@ -146,14 +146,14 @@ CREATE OR REPLACE SCRIPT deleteHistoryTableWithView() AS
 	function deleteFunction(sqlCommand)
 		local endTime = '9999-12-31 23:59:59.999'
 		tableName, sqlCommand, histTableName, newSqlCommand = history_lib.extractTableNameAndSqlCommand(sqlCommand)
-		newSqlCommand = newSqlCommand:gsub('DELETE FROM '..histTableName, 'UPDATE '..histTableName..' SET valid_until = CURRENT_TIMESTAMP')
+		newSqlCommand = newSqlCommand:gsub('DELETE FROM '..histTableName, 'UPDATE '..histTableName..' SET ta_end = CURRENT_TIMESTAMP')
 		suc, res = pquery('SELECT COUNT(*) AS CNT FROM '..tableName)
 		local countBefore = res[1].CNT
 		local whereStatement = newSqlCommand:match("WHERE%s+(.-)%s*$")
 		if whereStatement == nil then
-			newSqlCommand = newSqlCommand..' WHERE valid_until = :endTime'
+			newSqlCommand = newSqlCommand..' WHERE ta_end = :endTime'
 		else
-			newSqlCommand = newSqlCommand:gsub('WHERE', 'WHERE valid_until = :endTime AND')
+			newSqlCommand = newSqlCommand:gsub('WHERE', 'WHERE ta_end = :endTime AND')
 		end
 		suc, res = pquery(newSqlCommand, {endTime = endTime})
 		local msg
@@ -195,7 +195,7 @@ CREATE OR REPLACE SCRIPT selectWithTimeTravel() AS
 		tableName = string.upper(tableName)
 		local histTableName = 'HIST_'..tableName
 		local newSqlCommand = sqlCommand:gsub(tableName, histTableName)
-		newSqlCommand = newSqlCommand:gsub(' FROM '..histTableName..' AS OF SYSTEM TIME ', ' FROM '..histTableName..' WHERE valid_from <= '..tStamp..' AND valid_until > ')
+		newSqlCommand = newSqlCommand:gsub(' FROM '..histTableName..' AS OF SYSTEM TIME ', ' FROM '..histTableName..' WHERE ta_start <= '..tStamp..' AND ta_end > ')
 		return newSqlCommand
 	end
 	
