@@ -194,7 +194,7 @@ public class SqlTests {
         //Assert
         assertNotNull(resultSet);
         assertTrue(viewColumns.equalsIgnoreCase("id name "));
-        assertTrue(histColumns.equalsIgnoreCase("id name valid_from valid_until "));
+        assertTrue(histColumns.equalsIgnoreCase("id name ta_start ta_end "));
     }
 
     @Test
@@ -226,7 +226,7 @@ public class SqlTests {
         //Assert
         assertNotNull(resultSet);
         assertTrue(viewColumns.equalsIgnoreCase("id name "));
-        assertTrue(histColumns.equalsIgnoreCase("id name valid_from valid_until "));
+        assertTrue(histColumns.equalsIgnoreCase("id name ta_start ta_end "));
     }
 
     //endregion
@@ -389,7 +389,7 @@ public class SqlTests {
             resultSet = statement.executeQuery("SELECT * FROM MyNewTestTbl WHERE id = 1");
             resultSet.next();
             name = resultSet.getString(2);
-            resultSet = statement.executeQuery("SELECT COUNT(*) FROM HIST_MYNEWTESTTBL WHERE id = 1 AND valid_until != '9999-12-31 23:59:59.999'");
+            resultSet = statement.executeQuery("SELECT COUNT(*) FROM HIST_MYNEWTESTTBL WHERE id = 1 AND ta_end != '9999-12-31 23:59:59.999'");
             resultSet.next();
             count = resultSet.getInt(1);
             teardownPreprocessor();
