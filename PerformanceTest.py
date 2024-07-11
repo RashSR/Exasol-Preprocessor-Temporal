@@ -4,7 +4,7 @@ import time
 #Number of test loops
 loopCount = 2
 
-conn = pyexasol.connect(dsn='10.127.0.33', user='REINHOLD', password='REINHOLD', compression=True)
+conn = pyexasol.connect(dsn='dsn', user='user', password='psw', compression=True)
 conn.execute("OPEN SCHEMA REINHOLD")
 
 # CREATE-TEST
