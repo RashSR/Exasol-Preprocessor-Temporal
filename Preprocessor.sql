@@ -168,7 +168,7 @@ CREATE OR REPLACE SCRIPT deleteHistoryTableWithView() AS
 --AS OF SYSTEM TIME
 CREATE OR REPLACE SCRIPT selectWithTimeTravel() AS
 	import('TEST.HISTORYLIB', 'history_lib')
-	function createTimeTravelQuery(sqlCommand)u
+	function createTimeTravelQuery(sqlCommand)
 		local tStamp
 		local tokens = sqlparsing.tokenize(sqlCommand)
 		local aostSequence = {}
