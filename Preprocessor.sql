@@ -17,7 +17,7 @@ CREATE OR REPLACE SCRIPT historyLib() AS
 		local tokens = sqlparsing.tokenize(sqlCommand)
 		local tableName
 	    for i=1,#tokens do
-	    	if sqlparsing.isidentifier(tokens[i]) THEN
+	    	if sqlparsing.isidentifier(tokens[i]) then
 	        	tableName = tokens[i] --first identifier is tableName
 	        	break
 	    	end
