@@ -2,104 +2,153 @@ import pyexasol
 import time
 
 #Number of test loops
-loopCount = 2
+loopCount = 100
 
-conn = pyexasol.connect(dsn='dsn', user='user', password='psw', compression=True)
+conn = pyexasol.connect(dsn='myDns, user='myUser', password='myPw', compression=True)
 conn.execute("OPEN SCHEMA REINHOLD")
 
+# Clean up
+def cleanUp(isPreprocessorActive: bool = False):
+    if(isPreprocessorActive):
+        conn.execute("DROP VIEW Person;")
+        conn.execute("DROP TABLE HIST_Person;")
+    else:
+        conn.execute("DROP TABLE Person;")
+
 # CREATE-TEST
-def createTest():
-    start_time = time.time()
-
+def createTest(isPreprocessorActive: bool = False):
+    
+    fullTime = 0
+    
     for x in range(loopCount):
-        createQuery = "CREATE TABLE Person_"+ str(x) + " (ID int, first_name VARCHAR(250), last_name VARCHAR(250));"
+        startTime = time.time()
+        createQuery = "CREATE TABLE Person (ID int, first_name VARCHAR(250), last_name VARCHAR(250));"
         conn.execute(createQuery)
+        endTime = time.time()
+        elapsedTime = endTime - startTime
+        fullTime += elapsedTime
+        cleanUp(isPreprocessorActive)
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-
-    print(f"CREATE: {elapsed_time:.2f} s")
-
+    print(f"CREATE: {fullTime:.2f} s")
+    return fullTime
+    
 # INSERT-TEST
-def insertTest():
-    start_time = time.time()
+def insertTest(isPreprocessorActive: bool = False):
+    
+    fullTime = 0
+    createQuery = "CREATE TABLE Person (ID int, first_name VARCHAR(250), last_name VARCHAR(250));"
+    conn.execute(createQuery)
     
     for x in range(loopCount):
-        insertQuery = "INSERT INTO Person_"+ str(x) + " VALUES (2, 'Emmet', 'Brown'), (3, 'Clara', 'Clayton');"
+        startTime = time.time()
+        insertQuery = "INSERT INTO Person VALUES (2, 'Emmet', 'Brown'), (3, 'Clara', 'Clayton');"
         conn.execute(insertQuery)
-    
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    
-    print(f"INSERT: {elapsed_time:.2f} s")
+        endTime = time.time()
+        elapsedTime = endTime - startTime
+        fullTime += elapsedTime
+        conn.execute("DELETE FROM Person;")
+        
+    cleanUp(isPreprocessorActive)
+    print(f"INSERT: {fullTime:.2f} s")
+    return fullTime
 
 # SELECT-Test
-def selectTest():
-    start_time = time.time()
+def selectTest(isPreprocessorActive: bool = False):
+
+    fullTime = 0
+    createQuery = "CREATE TABLE Person (ID int, first_name VARCHAR(250), last_name VARCHAR(250));"
+    conn.execute(createQuery)
+    insertQuery = "INSERT INTO Person VALUES (2, 'Emmet', 'Brown'), (3, 'Clara', 'Clayton');"
+    conn.execute(insertQuery)
     
     for x in range(loopCount):
-        selectQuery = "SELECT * FROM Person_" + str(x) + ";"
+        startTime = time.time()
+        selectQuery = "SELECT * FROM Person;"
         conn.execute(selectQuery)
-    
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    
-    print(f"SELECT: {elapsed_time:.2f} s")
+        endTime = time.time()
+        elapsedTime = endTime - startTime
+        fullTime += elapsedTime
+
+    cleanUp(isPreprocessorActive)
+    print(f"SELECT: {fullTime:.2f} s")
+    return fullTime
 
 # UPDATE-TEST
-def updateTest():
-    start_time = time.time()
+def updateTest(isPreprocessorActive: bool = False):
     
+    fullTime = 0
+    createQuery = "CREATE TABLE Person (ID int, first_name VARCHAR(250), last_name VARCHAR(250));"
+    conn.execute(createQuery)
+
     for x in range(loopCount):
-        updateQuery = "UPDATE Person_" + str(x) + " SET last_name = 'Clayton-Brown' WHERE id = 3;"
+        insertQuery = "INSERT INTO Person VALUES (2, 'Emmet', 'Brown'), (3, 'Clara', 'Clayton');"
+        conn.execute(insertQuery)
+        startTime = time.time()
+        updateQuery = "UPDATE Person SET last_name = 'Clayton-Brown' WHERE id = 3;"
         conn.execute(updateQuery)
+        endTime = time.time()
+        elapsedTime = endTime - startTime
+        fullTime += elapsedTime
+        conn.execute("DELETE FROM Person;")
     
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    
-    print(f"UPDATE: {elapsed_time:.2f} s")
+    cleanUp(isPreprocessorActive)
+    print(f"UPDATE: {fullTime:.2f} s")
+    return fullTime
 
 # DELETE-TEST
-def deleteTest():
-    start_time = time.time()
+def deleteTest(isPreprocessorActive: bool = False):
     
+    fullTime = 0
+    createQuery = "CREATE TABLE Person (ID int, first_name VARCHAR(250), last_name VARCHAR(250));"
+    conn.execute(createQuery)
+
     for x in range(loopCount):
-        deleteQuery = "DELETE FROM Person_" + str(x) + ";"
+        insertQuery = "INSERT INTO Person VALUES (2, 'Emmet', 'Brown'), (3, 'Clara', 'Clayton');"
+        conn.execute(insertQuery)
+        startTime = time.time()
+        deleteQuery = "DELETE FROM Person;"
         conn.execute(deleteQuery)
-    
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    
-    print(f"DELETE: {elapsed_time:.2f} s")
+        endTime = time.time()
+        elapsedTime = endTime - startTime
+        fullTime += elapsedTime
 
-#Clean-Up
-def cleanUp(isPreprocessorActive: bool = False):
-    for x in range(loopCount):
-        conn.execute("DROP TABLE Person_" + str(x) + ";")
-        if(isPreprocessorActive):
-            conn.execute("DROP VIEW HIST_Person_" + str(x) + ";")
-
-    print("Removed all created data.")
+    cleanUp(isPreprocessorActive)
+    print(f"DELETE: {fullTime:.2f} s")
+    return fullTime
 
 # test performance WITHOUT Preprocessor
 print("Start tests WITHOUT Preprocessor for " + str(loopCount) + " loops.")
 conn.execute("ALTER SESSION SET sql_preprocessor_script = null;")
 
-createTest()
-insertTest()
-selectTest()
-updateTest()
-deleteTest()
-cleanUp()
+t1WithoutPP = createTest()
+t2WithoutPP = insertTest()
+t3WithoutPP = selectTest()
+t4WithoutPP = updateTest()
+t5WithoutPP = deleteTest()
+
+tGesWithoutPP = t1WithoutPP + t2WithoutPP + t3WithoutPP + t4WithoutPP + t5WithoutPP
+print(f"Full time for all tests WITHOUT Preprocessor: {tGesWithoutPP:.2f} s")
 
 # test performance WITH Preprocessor
+print("---------------------------------------------------------------------")
 print("Start tests WITH Preprocessor for " + str(loopCount) + " loops.")
 isPreprocessorActive = True
-conn.execute("ALTER SESSION SET sql_preprocessor_script = myPreprocessor;")
+conn.execute("ALTER SESSION SET sql_preprocessor_script = mypreprocessor;")
 
-createTest()
-insertTest()
-selectTest()
-updateTest()
-deleteTest()
-cleanUp(isPreprocessorActive)
+t1WithPP = createTest(isPreprocessorActive)
+t2WithPP = insertTest(isPreprocessorActive)
+t3WithPP = selectTest(isPreprocessorActive)
+t4WithPP = updateTest(isPreprocessorActive)
+t5WithPP = deleteTest(isPreprocessorActive)
+
+tGesWithPP = t1WithPP + t2WithPP + t3WithPP + t4WithPP + t5WithPP
+print(f"Full time for all tests WITH Preprocessor: {tGesWithPP:.2f} s")
+
+print("---------------------------------------------------------------------")
+print("Performance analysis:")
+print(f"Performance loss CREATE: {t1WithPP/t1WithoutPP:.2f}")
+print(f"Performance loss INSERT: {t2WithPP/t2WithoutPP:.2f}")
+print(f"Performance loss SELECT: {t3WithPP/t3WithoutPP:.2f}")
+print(f"Performance loss UPDATE: {t4WithPP/t4WithoutPP:.2f}")
+print(f"Performance loss DELETE: {t5WithPP/t5WithoutPP:.2f}")
+print(f"Performance loss overall: {tGesWithPP/tGesWithoutPP:.2f}")
