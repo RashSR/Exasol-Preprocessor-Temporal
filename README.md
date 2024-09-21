@@ -14,4 +14,4 @@ INSERT, UPDATE, DELETE
 
 One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like *SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';*
 
-If historical data storage is no longer required, the preprocessor can be deactivated with the following command *ALTER SESSION SET sql_preprocessor_script = mypreprocessor;*
+If historical data storage is no longer required, the preprocessor can be deactivated with the following command *ALTER SESSION SET sql_preprocessor_script = null;*
