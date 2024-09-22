@@ -8,7 +8,8 @@ Download the *Preprocessor.sql* file and execute all the commands it contains in
 *ALTER SESSION SET sql_preprocessor_script = mypreprocessor;*.
 
 After activation, each newly created table has historical storage. This is accomplished using a history table and a SQL view with only current data. Both tables can be queried like expected. Tables can be created with commands such as:<br>
-*CREATE TABLE <table_name> (<column_name> \<DATATYPE\>, ...);* or *CREATE TABLE <new_tbl> LIKE <orig_tbl>;*
+*CREATE TABLE <table_name> (<column_name> \<DATATYPE\>, ...);*<br>
+*CREATE TABLE <new_tbl> LIKE <orig_tbl>;*
 
 The following commands can be used to add new data records:<br>
 *INSERT INTO <table_name> (<column_name>, ...) VALUES (<\value\>, ...);*<br>
