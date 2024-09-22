@@ -4,9 +4,11 @@ This repository achieves **Temporal Data Management** in Exasol with the help of
 
 ## Usage 
 
-Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance. To activate the preprocessor use the following command: *ALTER SESSION SET sql_preprocessor_script = mypreprocessor;*.
+Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance. To activate the preprocessor use the following command:<br> 
+*ALTER SESSION SET sql_preprocessor_script = mypreprocessor;*.
 
-After activation, each newly created table has historical storage. This is accomplished using a history table and a SQL view with only current data. Both tables can be queried like expected. Tables can be created with commands such as *CREATE TABLE <tbl_name> (<clm_name><DATATYPE>);* or *CREATE TABLE <new_tbl> LIKE <orig_tbl>;*. 
+After activation, each newly created table has historical storage. This is accomplished using a history table and a SQL view with only current data. Both tables can be queried like expected. Tables can be created with commands such as:<br>
+*CREATE TABLE <tbl_name> (<clmn_name> <DATA_TYPE>);* or *CREATE TABLE <new_tbl> LIKE <orig_tbl>;*
 
 INSERT, UPDATE, DELETE
 
@@ -14,4 +16,5 @@ INSERT, UPDATE, DELETE
 
 One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like *SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';*
 
-If historical data storage is no longer required, the preprocessor can be deactivated with the following command *ALTER SESSION SET sql_preprocessor_script = null;*
+If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br> 
+*ALTER SESSION SET sql_preprocessor_script = null;*
