@@ -13,7 +13,6 @@ After activation, each newly created table has historical storage. This is accom
 The following commands can be used to add new data records:<br>
 *INSERT INTO <table_name> (<column_name>, ...) VALUES (<\value\>, ...);*<br>
 *INSERT INTO <table_name> VALUES (<\value\>, ...);*<br>
-*INSERT INTO <table_name> SELECT * FROM <other_table>;*<br>
 *INSERT INTO <table_name> (<column_name>, ...) SELECT (<column_name>, ...) FROM <other_table>;*
 
 To update an existing data set the subsequent command can be used:<br>
