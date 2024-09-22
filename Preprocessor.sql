@@ -95,10 +95,6 @@ CREATE OR REPLACE SCRIPT insertIntoHistoryTableWithView() AS
 		end
 		return msg
 	end
-	
-EXECUTE SCRIPT insertIntoHistoryTableWithView() with output;
-INSERT INTO HIST_MYNEWTESTTBL (ID, NAME) SELECT (ID, NAME) FROM SecondTestTable;
-INSERT INTO MyNewTestTbl SELECT * FROM SecondTestTable;
 
 --UPDATE
 CREATE OR REPLACE SCRIPT updateHistoryTableWithView() AS
