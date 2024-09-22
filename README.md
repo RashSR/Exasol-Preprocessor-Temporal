@@ -4,9 +4,9 @@ This repository achieves **Temporal Data Management** in Exasol with the help of
 
 ## Usage 
 
-Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance. To activate the preprocessor use the following command: *ALTER SESSION SET sql_preprocessor_script = mypreprocessor;*
+Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance. To activate the preprocessor use the following command: *ALTER SESSION SET sql_preprocessor_script = mypreprocessor;*.
 
-After activation, each newly created table has historical storage. This is accomplished using a history table and a SQL view with only current data. Both tables can be queried like expected.
+After activation, each newly created table has historical storage. This is accomplished using a history table and a SQL view with only current data. Both tables can be queried like expected. Tables can be created with commands such as *CREATE TABLE <tbl_name> (<clm_name><DATATYPE>);* or *CREATE TABLE <new_tbl> LIKE <orig_tbl>;*. 
 
 INSERT, UPDATE, DELETE
 
