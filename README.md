@@ -24,7 +24,8 @@ Data can be invalidated with a *DELETE* command. This syntax can also be used to
 
 **Note: Due to its prototype nature this implementation does not support all possible SQL commands. Each successful query is confirmed with a status message e.g. how many rows are affected by this change.**
 
-One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like *SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';*
+One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like:<br>
+*SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';*
 
 If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br> 
 *ALTER SESSION SET sql_preprocessor_script = null;*
