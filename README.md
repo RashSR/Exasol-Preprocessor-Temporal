@@ -2,12 +2,19 @@
 
 This repository achieves **Temporal Data Management** in Exasol with the help of **query rewriting** using a Preprocessor script. Temporal data refers to data that changes over time, and this feature enables tracking historical records while allowing for time-based queries. More indepth information about this proof of concept implementation can be found in the scientific paper *A Query-Rewriting-based Implementation for Temporal Data Management*.
 
-## Usage 
+## Installation 
 
 Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance on a schema called *TEST*. To activate the preprocessor use the following command:<br> 
 ``` sql 
 ALTER SESSION SET sql_preprocessor_script = historical_storage_preprocessor;
 ```
+
+If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br>
+``` sql 
+ALTER SESSION SET sql_preprocessor_script = null;
+```
+
+## Supported Commands
 
 After activation, each newly created table has historical storage. This is accomplished using a history table and an SQL view with only current data. Each table has a corresponding history table with the prefix *HIST_* following the <table_name> and both tables can be queried like expected. Tables can be created with commands such as:<br>
 ``` sql 
@@ -37,9 +44,4 @@ DELETE FROM <tbl_name> WHERE <condition>;
 One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like:<br>
 ``` sql 
 SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';
-```
-
-If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br>
-``` sql 
-ALTER SESSION SET sql_preprocessor_script = null;
 ```
