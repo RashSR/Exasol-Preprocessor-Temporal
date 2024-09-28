@@ -16,6 +16,8 @@ ALTER SESSION SET sql_preprocessor_script = null;
 
 ## Supported Commands
 
+Due to its prototype nature this implementation does not support all possible SQL commands. Each query is confirmed with a status message. If this message is displayed, it means that the command has been executed successfully.  This message contains usefull information e.g. how many rows are affected by this change.
+
 After activation, each newly created table has historical storage. This is accomplished using a history table and an SQL view with only current data. Each table has a corresponding history table with the prefix *HIST_* following the <table_name> and both tables can be queried like expected. Tables can be created with commands such as:<br>
 ``` sql 
 CREATE TABLE <table_name> (<column_name> <DATATYPE>, ...);
@@ -38,8 +40,6 @@ Data can be invalidated with a *DELETE* command. This syntax can also be used to
 ``` sql 
 DELETE FROM <tbl_name> WHERE <condition>;
 ```
-
-**Note: Due to its prototype nature this implementation does not support all possible SQL commands. Each successful query is confirmed with a status message e.g. how many rows are affected by this change.**
 
 One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like:<br>
 ``` sql 
