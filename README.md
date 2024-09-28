@@ -4,7 +4,7 @@ This repository achieves **Temporal Data Management** in Exasol with the help of
 
 ## Installation 
 
-Download the *Preprocessor.sql* file from this GitHub repository. This file contains a few lua scripts. Execute all of the scripts in your exasol instance in the order in which they appear. The schema in this example is called TEST. Note that you will need to rename it to match your database schema for it to work. Once all scripts have been executed, the preprocessor can be activated. To activate the preprocessor use the command below. <br> 
+Download the *Preprocessor.sql* file from this GitHub repository. This file contains a few lua scripts. Execute all of the scripts in your exasol instance in the order in which they appear. The schema in this example is called TEST. Note that you will need to rename it to match your database schema for it to work. Once all scripts have been executed, the preprocessor can be activated. To activate the preprocessor from this repository use the command below. <br> 
 ``` sql 
 ALTER SESSION SET sql_preprocessor_script = historical_storage_preprocessor;
 ```
