@@ -5,27 +5,41 @@ This repository achieves **Temporal Data Management** in Exasol with the help of
 ## Usage 
 
 Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance on a schema called *TEST*. To activate the preprocessor use the following command:<br> 
-*ALTER SESSION SET sql_preprocessor_script = <preprocessor_script_name>;*
+``` sql 
+ALTER SESSION SET sql_preprocessor_script = <preprocessor_script_name>;
+```
 
 After activation, each newly created table has historical storage. This is accomplished using a history table and an SQL view with only current data. Each table has a corresponding history table with the prefix *HIST_* following the <table_name> and both tables can be queried like expected. Tables can be created with commands such as:<br>
-*CREATE TABLE <table_name> (<column_name> \<DATATYPE\>, ...);*<br>
-*CREATE TABLE <new_tbl> LIKE <orig_tbl>;*
+``` sql 
+CREATE TABLE <table_name> (<column_name> <DATATYPE>, ...);
+CREATE TABLE <new_tbl> LIKE <orig_tbl>;
+```
 
 The following commands can be used to add new data records:<br>
-*INSERT INTO <table_name> (<column_name>, ...) VALUES (\<value\>, ...), ... ;*<br>
-*INSERT INTO <table_name> VALUES (\<value\>, ...), ... ;*<br>
-*INSERT INTO <table_name> (<column_name>, ...) SELECT (<column_name>, ...) FROM <other_table>;*
+``` sql 
+INSERT INTO <table_name> (<column_name>, ...) VALUES (<value>, ...), ... ;
+INSERT INTO <table_name> VALUES (<value>, ...), ... ;
+INSERT INTO <table_name> (<column_name>, ...) SELECT (<column_name>, ...) FROM <other_table>;
+```
 
 To update an existing data set the subsequent command can be used:<br>
-*UPDATE <table_name> SET <column_name> = \<value\>, ... WHERE \<condition\>;* 
+``` sql 
+UPDATE <table_name> SET <column_name> = <value>, ... WHERE <condition>;
+```
 
 Data can be invalidated with a *DELETE* command. This syntax can also be used to empty a whole table without a *WHERE* clause. <br>
-*DELETE FROM <tbl_name> WHERE \<condition\>;*
+``` sql 
+DELETE FROM <tbl_name> WHERE <condition>;
+```
 
 **Note: Due to its prototype nature this implementation does not support all possible SQL commands. Each successful query is confirmed with a status message e.g. how many rows are affected by this change.**
 
 One of the main feature of this tool is to retrieve outdated data. For this, a *SELECT* query needs to be extended by a *AS OF SYSTEM TIME* clause. This should look like:<br>
-*SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';*
+``` sql 
+SELECT <column_name> FROM <table_name> AS OF SYSTEM TIME 'YYYY-MM-DD HH:mm';
+```
 
-If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br> 
-*ALTER SESSION SET sql_preprocessor_script = null;*
+If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br>
+``` sql 
+ALTER SESSION SET sql_preprocessor_script = null;
+```
