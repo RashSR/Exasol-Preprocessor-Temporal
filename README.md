@@ -1,15 +1,15 @@
 ## About
 
-This repository achieves **Temporal Data Management** in Exasol with the help of **query rewriting** using a Preprocessor script. Temporal data refers to data that changes over time, and this feature enables tracking historical records while allowing for time-based queries. More indepth information about this proof of concept implementation can be found in the scientific paper *A Query-Rewriting-based Implementation for Temporal Data Management*.
+This repository achieves **Temporal Data Management** in Exasol with the help of **query rewriting** using a preprocessor script. Temporal data refers to data that changes over time, and this feature enables tracking historical records while allowing for time-based queries. More indepth information about this proof of concept implementation can be found in the scientific paper *A Query-Rewriting-based Implementation for Temporal Data Management*.
 
 ## Installation 
 
-Download the *Preprocessor.sql* file and execute all the commands it contains in the right order in your exasol instance on a schema called *TEST*. To activate the preprocessor use the following command:<br> 
+Download the *Preprocessor.sql* file from this GitHub repository. This file contains a few lua scripts. Execute all of the scripts in your exasol instance in the order in which they appear. The schema in this example is called TEST. Note that you will need to rename it to match your database schema for it to work. Once all scripts have been executed, the preprocessor can be activated. To activate the preprocessor use the command below. <br> 
 ``` sql 
 ALTER SESSION SET sql_preprocessor_script = historical_storage_preprocessor;
 ```
 
-If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br>
+After activation each query will be rewritten by the preprocessor. If historical data storage is no longer required, the preprocessor can be deactivated with the following command:<br>
 ``` sql 
 ALTER SESSION SET sql_preprocessor_script = null;
 ```
