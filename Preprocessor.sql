@@ -228,7 +228,7 @@ CREATE OR REPLACE LUA SCRIPT mytransform() AS
 		return sqlText
 	end
 	
-CREATE OR REPLACE LUA SCRIPT mypreprocessor() AS
+CREATE OR REPLACE LUA SCRIPT historical_storage_preprocessor() AS
 	import('TEST.MYTRANSFORM', 'MYTRANSFORM')
 	sqlText = sqlparsing.getsqltext() --text that user sent to DB
 	sqlText = MYTRANSFORM.transform_use(sqlText)
