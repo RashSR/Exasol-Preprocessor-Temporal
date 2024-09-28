@@ -78,7 +78,7 @@ CREATE OR REPLACE SCRIPT insertIntoHistoryTableWithView() AS
 		local columnNames = history_lib.getAllColumns(tableName)
 		output(table.concat(columnNames, ', '))
 	  	if newSqlCommand:match("%((.-)%)") == nil then 
-	  		--2.1 TODO ignore everything beyond second table
+	  		--2.1 
 			newSqlCommand = newSqlCommand:gsub(histTableName, histTableName..' ('..table.concat(columnNames, ', ')..')', 1)
 	  		newSqlCommand = newSqlCommand:gsub('*', '('..table.concat(columnNames, ', ')..')', 1)
 	  	else
